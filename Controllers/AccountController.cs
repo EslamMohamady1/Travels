@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -9,6 +10,10 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using WebApplication1.Models;
+using Microsoft.AspNet.Identity;
+using WebApplication1.Models;
+using System.Net;
+using System.Data.Entity;
 
 namespace WebApplication1.Controllers
 {
@@ -17,9 +22,10 @@ namespace WebApplication1.Controllers
     {
         private ApplicationSignInManager _signInManager;
         private ApplicationUserManager _userManager;
-
+        private ApplicationDbContext db;
         public AccountController()
         {
+            db = new ApplicationDbContext();
         }
 
         public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
@@ -75,9 +81,11 @@ namespace WebApplication1.Controllers
 
             // This doesn't count login failures towards account lockout
             // To enable password failures to trigger account lockout, change to shouldLockout: true
-            var result = await SignInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, shouldLockout: false);
+            var result = await SignInManager.PasswordSignInAsync( model.UserName, model.Password, model.RememberMe  , shouldLockout: false);
+           
             switch (result)
             {
+
                 case SignInStatus.Success:
                     return RedirectToLocal(returnUrl);
                 case SignInStatus.LockedOut:
@@ -88,6 +96,7 @@ namespace WebApplication1.Controllers
                 default:
                     ModelState.AddModelError("", "Invalid login attempt.");
                     return View(model);
+                   
             }
         }
 
@@ -139,7 +148,7 @@ namespace WebApplication1.Controllers
         [AllowAnonymous]
         public ActionResult Register()
         {
-            ViewBag.UserType = new SelectList(new[] { "باحث ", "ناشر "});
+            ViewBag.UserType = new SelectList(db.Roles.Where(a => !a.Name.Contains("Adminstrator")).ToList(),"Name" , "Name");
             return View();
 
         }
@@ -149,23 +158,46 @@ namespace WebApplication1.Controllers
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<ActionResult> Register(RegisterViewModel model)
+        public async Task<ActionResult> Register(RegisterViewModel model, HttpPostedFileBase upload)
         {
             if (ModelState.IsValid)
             {
-                var user = new ApplicationUser { UserName = model.UserName ,Email = model.Email , UserType= model.UserType };
+
+
+                
+
+
+                //string path = Path.Combine(Server.MapPath("~/Uploads"), Userimages.FileName);
+                //Userimages.SaveAs(path);
+                //model.UserImage = Userimages.FileName;
+                string username = User.Identity.Name;
+                ViewBag.UserType = new SelectList(db.Roles.Where(a => !a.Name.Contains("Adminstrator")).ToList(), "Name", "Name");
+                var user = new ApplicationUser { UserName = model.UserName ,Email = model.Email , UserType= model.UserType , FirstName = model.FirstName , LastName = model.LastName , PhoneNumber = model.PhoneNumber , UserImage = model.UserImage};
                 var result = await UserManager.CreateAsync(user, model.Password);
+                
+               
                 if (result.Succeeded)
                 {
                     await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
-                    
+
                     // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
                     // Send an email with this link
                     // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
                     // var callbackUrl = Url.Action("ConfirmEmail", "Account", new { userId = user.Id, code = code }, protocol: Request.Url.Scheme);
                     // await UserManager.SendEmailAsync(user.Id, "Confirm your account", "Please confirm your account by clicking <a href=\"" + callbackUrl + "\">here</a>");
 
-                    return RedirectToAction("Index", "Home");
+                    await UserManager.AddToRoleAsync(user.Id, model.UserType);
+                    var db = new ApplicationDbContext();
+                    var UserId = User.Identity.GetUserId();
+                    var currentUser = db.Users.Where(a => a.Id == UserId).SingleOrDefault();
+                    if (model.UserType == "Traveler")
+            {
+                        return RedirectToAction("Index", "Home");
+                    }
+                    else
+                    {
+                        return RedirectToAction("GetJobsByPublisher", "Home");
+                    }
                 }
                 AddErrors(result);
             }
@@ -173,6 +205,105 @@ namespace WebApplication1.Controllers
             // If we got this far, something failed, redisplay form
             return View(model);
         }
+
+
+
+
+        //public ActionResult EditProfile()
+        //{
+        //    var UserID = User.Identity.GetUserId();
+        //    var user = db.Users.Where(a => a.Id == UserID).SingleOrDefault();
+        //    EdietProfileViewModel profile = new EdietProfileViewModel();
+        //    profile.UserName = user.UserName;
+        //    profile.Email = user.Email;
+        //    return View(profile);
+        //}
+
+
+
+
+        //[HttpPost]
+        //public ActionResult EditProfile(EdietProfileViewModel profile)
+        //{
+        //    var UserID = User.Identity.GetUserId();
+        //    var CurrentUser = db.Users.Where(a => a.Id == UserID).SingleOrDefault();
+        //    if (!UserManager.CheckPassword(CurrentUser, profile.CurrentPassword))
+        //    {
+        //        ViewBag.Message = "Error Password";
+        //    }
+        //    else
+        //    {
+        //        var newPasswordHash = UserManager.PasswordHasher.HashPassword(profile.NewPassword);
+        //        CurrentUser.UserName = profile.UserName;
+        //        CurrentUser.Email = profile.Email;
+        //        CurrentUser.LastName = profile.LastName;
+        //        CurrentUser.FirstName = profile.FirstName;
+        //        CurrentUser.PasswordHash = newPasswordHash;
+        //        db.Entry(CurrentUser).State = System.Data.Entity.EntityState.Modified;
+        //        db.SaveChanges();
+        //        ViewBag.Message = "تمت عملية التحديث بنجاح";
+        //    }
+        //    return View(profile);
+        //}
+
+
+
+
+
+
+
+
+        public ActionResult EditProfile()
+        {
+            var UserID = User.Identity.GetUserId();
+            var user = db.Users.Where(a => a.Id == UserID).SingleOrDefault();
+            EditProfileViewModel profile = new EditProfileViewModel();
+            profile.UserName = user.UserName;
+            profile.Email = user.Email;
+            profile.PhoneNumper = user.PhoneNumber;
+            
+            return View(profile);
+        }
+
+        [HttpPost]
+        public ActionResult EditProfile(EditProfileViewModel profile)
+        {
+            var UserID = User.Identity.GetUserId();
+            var CurrentUser = db.Users.Where(a => a.Id == UserID).SingleOrDefault();
+            if (!UserManager.CheckPassword(CurrentUser, profile.CurrentPassword))
+            {
+                ViewBag.Message = "كلمة السر الحالية غير صحيحة";
+            }
+            else
+            {
+                var newPasswordHash = UserManager.PasswordHasher.HashPassword(profile.NewPassword);
+                CurrentUser.UserName = profile.UserName;
+                CurrentUser.Email = profile.Email;
+                CurrentUser.PhoneNumber = profile.PhoneNumper;
+                CurrentUser.LastName = profile.LastName;
+                CurrentUser.FirstName = profile.FirstName;
+                CurrentUser.PasswordHash = newPasswordHash;
+                db.Entry(CurrentUser).State = System.Data.Entity.EntityState.Modified;
+                db.SaveChanges();
+                ViewBag.Message = "تمت عملية التحديث بنجاح";
+            }
+            return View(profile);
+        }
+
+
+
+
+       
+
+
+
+
+
+
+
+
+
+
 
         //
         // GET: /Account/ConfirmEmail

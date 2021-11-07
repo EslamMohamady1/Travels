@@ -1,6 +1,8 @@
-﻿using System.Data.Entity;
+﻿using System.Collections.Generic;
+using System.Data.Entity;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using JobOfferWebiste.Models;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 
@@ -9,7 +11,14 @@ namespace WebApplication1.Models
     // You can add profile data for the user by adding more properties to your ApplicationUser class, please visit https://go.microsoft.com/fwlink/?LinkID=317594 to learn more.
     public class ApplicationUser : IdentityUser
     {
-        public string UserType { get; set; }  // سيتم اضافته لقاعده البيانات بمجرد تنفيذ الكود  objectهذا ال
+        public string FirstName { get; set; }
+
+        public string LastName { get; set; }
+        public string UserImage { get; set; }
+
+        public string UserType { get; set; }
+        public virtual ICollection<Job> Jobs { get; set; }
+        // سيتم اضافته لقاعده البيانات بمجرد تنفيذ الكود  objectهذا ال
         public async Task<ClaimsIdentity> GenerateUserIdentityAsync(UserManager<ApplicationUser> manager)
         {
             // Note the authenticationType must match the one defined in CookieAuthenticationOptions.AuthenticationType
@@ -25,6 +34,7 @@ namespace WebApplication1.Models
             : base("DefaultConnection", throwIfV1Schema: false)
         {
         }
+        
 
         public static ApplicationDbContext Create()
         {
@@ -32,5 +42,12 @@ namespace WebApplication1.Models
         }
 
         public System.Data.Entity.DbSet<JobOfferWebiste.Models.Category> Categories { get; set; }
+
+        public System.Data.Entity.DbSet<JobOfferWebiste.Models.Job> Jobs { get; set; }
+
+        public System.Data.Entity.DbSet<JobOfferWebiste.Models.AplaForJob> AplaForJobs { get; set; }
+
+        public System.Data.Entity.DbSet<JobOfferWebiste.Models.CommentsModel> CommentsModels { get; set; }
+
     }
 }

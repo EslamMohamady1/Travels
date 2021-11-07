@@ -11,6 +11,7 @@ using WebApplication1.Models;
 
 namespace JobOfferWebiste.Controllers
 {
+    [Authorize]
     public class CategoriesController : Controller
     {
         private ApplicationDbContext db = new ApplicationDbContext();

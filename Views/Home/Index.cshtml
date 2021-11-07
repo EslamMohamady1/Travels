@@ -1,31 +1,56 @@
-﻿@{
+﻿
+@model IEnumerable<JobOfferWebiste.Models.Category>
+
+
+@{
     ViewBag.Title = "Home Page";
 }
 
-<div class="jumbotron">
-    <h1>ASP.NET</h1>
-    <p class="lead">ASP.NET is a free web framework for building great Web sites and Web applications using HTML, CSS and JavaScript.</p>
-    <p><a href="https://asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
+<div class="thumbnail" style="text-align: left; margin-left: -60px; margin-right: -70px; ">
+    <h1>Welcom In Our WebeSite</h1>
 </div>
 
-<div class="row">
-    <div class="col-md-4">
-        <h2>Getting started</h2>
-        <p>
-            ASP.NET MVC gives you a powerful, patterns-based way to build dynamic websites that
-            enables a clean separation of concerns and gives you full control over markup
-            for enjoyable, agile development.
-        </p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301865">Learn more &raquo;</a></p>
+<h1 id="e"></h1>
+
+
+@foreach (var item in Model)
+{
+    <div class="panel panel-info " style="padding: 2px; width: 1270px; margin-right: -70px; margin-left: -70px; text-align: left ">
+        <div class="panel-heading" style="text-align: left "><h1>@Html.DisplayFor(Model => item.CategoryName)</h1></div>
+
+
+        <div class="Row panel-body " style="text-align: left ; ">
+            <h5>@Html.DisplayFor(Model => item.CategoryDescription)</h5>
+
+            @foreach (var SubItem in item.Jobs)
+            {
+        <div class="col-md-3 thumbnail" style="margin-left: 2px; margin-top: 5px; margin-bottom: 100px; height: 650px; width: 400px; text-align: left ">
+            <img style="height:285px; width:390px" src="~/Uploads/@SubItem.TripImage" />
+            <h3>TripTitle : @Html.DisplayFor(modelItem => SubItem.TripTitle)</h3>
+            <h4>AgencyName : @Html.DisplayFor(modelItem => SubItem.AgencyName)</h4>
+            <h5>TripDetails : @Html.DisplayFor(modelItem => SubItem.TripDetails)</h5>
+            <h5>TripDate : @Html.DisplayFor(modelItem => SubItem.TripDate)</h5>
+            <h5>TripDestination : @Html.DisplayFor(modelItem => SubItem.TripDestination)</h5>
+            <h2>The Price : @Html.DisplayFor(modelItem => SubItem.Price)</h2>
+
+
+           
+            <hr />
+            
+            @Html.ActionLink("Details", "Detailse", new { JopId = SubItem.Id }, new { @class = "btn btn-info" })
+
+
+
+        </div>
+
+
+            }
+        </div>
     </div>
-    <div class="col-md-4">
-        <h2>Get more libraries</h2>
-        <p>NuGet is a free Visual Studio extension that makes it easy to add, remove, and update libraries and tools in Visual Studio projects.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301866">Learn more &raquo;</a></p>
-    </div>
-    <div class="col-md-4">
-        <h2>Web Hosting</h2>
-        <p>You can easily find a web hosting company that offers the right mix of features and price for your applications.</p>
-        <p><a class="btn btn-default" href="https://go.microsoft.com/fwlink/?LinkId=301867">Learn more &raquo;</a></p>
-    </div>
-</div>
+}
+
+
+
+
+
+

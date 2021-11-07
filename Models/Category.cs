@@ -11,11 +11,13 @@ namespace JobOfferWebiste.Models
         public int Id { get; set; }
 
         [Required]
-        [Display(Name ="نوع الوظيفة")]
+        [Display(Name ="Job Type")]
         public string CategoryName { get; set; }
 
         [Required]
-        [Display(Name ="وصف الوظيفة")]
+        [Display(Name ="Job Description")]
         public string CategoryDescription { get; set; }
+
+        public virtual ICollection<Job> Jobs { get; set; }
     }
 }
